@@ -7,4 +7,4 @@ sock.bind(addr)
 while True:
   data,addr = sock.recvfrom(32768)
   print(data)
-  print(addr)
+  print(int(data[1],2))

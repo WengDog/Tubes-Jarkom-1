@@ -1,5 +1,6 @@
 from socket import *
 
+import packet
 import sys
 import random
 
@@ -9,34 +10,37 @@ port = 5005
 MAX_DATA_SIZE = 32768 # 32kb
 addr = (host,port)
 
-fname =sys.argv[1].encode()
+fname = input("file name: ")
+FILE_NAME =fname.encode()
 
 f = open(fname, "rb")
 DATA = f.read(MAX_DATA_SIZE)
-NEXT_DATA = f.read(MAX_DATA_SIZE)
 i = 0
+ID = random.randrange(15)
 
-while(len(NEXT_DATA) != 0):
-  # Make header
-  TYPE = "00000000"
-  ID = random.randrange(15)
-  str_header = TYPE + format(ID, "08b")
-  HEADER = int(str_header).to_bytes(1,"big")
-
-  # Make sequence number
-  SEQUENCE_NUMBER = i.to_bytes(2,"big")
-
-  # Make length
-  LENGTH = len(DATA).to_bytes(2,"big")
-
-  # Make Checksum
-  temp = HEADER + SEQUENCE_NUMBER + LENGTH + DATA
-  
-
-
-  DATA = NEXT_DATA
+while(DATA):
   NEXT_DATA = f.read(MAX_DATA_SIZE)
-  i += 1
+
+  # Selama bukan paket terakhir
+  if(len(NEXT_DATA) != 0):
+    TYPE = "0000"
+  else:
+    TYPE = "0010"
+  
+  # Make HEADER = TYPE + ID
+  str_header = TYPE + format(ID, "04b")
+  HEADER = int(str_header,2).to_bytes(1,"big")
+
+  # Make SEQUENCE_NUMBER
+  SEQUENCE_NUMBER = i.to_bytes(2, "big")
+
+  # Make LENGTH
+  LENGTH = len(DATA).to_bytes(2, "big")
+
+  # Make PACKET
+  PACKET = packet.Packet(HEADER, SEQUENCE_NUMBER, LENGTH, DATA)
+  PACKET.encode()
+  sock.sendto(PACKET, addr)
 
 sock.close()
 f.close()
