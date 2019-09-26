@@ -6,11 +6,11 @@ port = input("Port: ")
 host = input("Host: ")
 addr = (host, int(port))
 receiver.bind(addr)
-DATA_FILE = b''
+
+DATA_FILE = {}
 
 while True:
   data,addr = receiver.recvfrom(packet.MAX_PACKET_SIZE)
-  
   # get packet data
   HEADER = data[0:1]
   TYPE = int.from_bytes(HEADER, byteorder="big") >> 4
@@ -19,24 +19,28 @@ while True:
   LENGTH = data[3:5]
   CHECKSUM = data[5:7]
   DATA = data[7:]
-  print("packet ",str(ID)," sequence ",str(SEQUENCE_NUMBER,'utf-8')," accepted")
+  print("packet ",str(ID)," sequence ",int.from_bytes(SEQUENCE_NUMBER, byteorder="big")," accepted")
 
   # validate checksum
   check = packet.Packet(HEADER, SEQUENCE_NUMBER, LENGTH, DATA).getCHECKSUM()
   if(check == CHECKSUM):
+    
+    # penggabungan data dari paket yang memiliki ID yang sama
+    if ID in DATA_FILE:
+      DATA_FILE[ID] += DATA
+    else:
+      DATA_FILE[ID] = DATA
+
     # Cek apakah sudah paket terakhir atau belum
-
-    DATA_FILE += DATA
-
     if(TYPE == packet.FIN):
       print("Making File......")
       TYPE_REPLY = "0011"
-      fileName = "received_file" + str(ID)
+      fileName = "received_file_" + str(ID)
       f = open(fileName, "wb")
-      f.write(DATA_FILE)
+      f.write(DATA_FILE[ID])
       f.close()
-      print("file ",fileName," received")
-      DATA_FILE = b''
+      print("file ",fileName," received\n")
+      del DATA_FILE[ID]
     else:
       TYPE_REPLY = "0010"
 
@@ -47,5 +51,8 @@ while True:
     # Make packet
     PACKET_REPLY = packet.Packet(HEADER_REPLY, SEQUENCE_NUMBER, LENGTH, DATA).encode()
     receiver.sendto(PACKET_REPLY, addr)
+    
   else:
+    # jika hasil checksum tidak sama
     print("Packet is loss")
+  
