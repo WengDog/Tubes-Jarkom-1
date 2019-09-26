@@ -6,7 +6,7 @@ port = input("Port: ")
 host = input("Host: ")
 addr = (host, int(port))
 receiver.bind(addr)
-DATA_FILE = (0).to_bytes(packet.MAX_DATA_SIZE, "big")
+DATA_FILE = b''
 
 while True:
   data,addr = receiver.recvfrom(packet.MAX_PACKET_SIZE)
@@ -19,6 +19,7 @@ while True:
   LENGTH = data[3:5]
   CHECKSUM = data[5:7]
   DATA = data[7:]
+  print("packet ",str(ID)," sequence ",str(SEQUENCE_NUMBER,'utf-8')," accepted")
 
   # validate checksum
   check = packet.Packet(HEADER, SEQUENCE_NUMBER, LENGTH, DATA).getCHECKSUM()
@@ -28,10 +29,14 @@ while True:
     DATA_FILE += DATA
 
     if(TYPE == packet.FIN):
+      print("Making File......")
       TYPE_REPLY = "0011"
-      f = open("received_file", "wb")
+      fileName = "received_file" + str(ID)
+      f = open(fileName, "wb")
       f.write(DATA_FILE)
       f.close()
+      print("file ",fileName," received")
+      DATA_FILE = b''
     else:
       TYPE_REPLY = "0010"
 
