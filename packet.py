@@ -29,8 +29,9 @@ class Packet:
     SUM = self.HEADER + self.SEQUENCE_NUMBER + self.LENGTH + self.DATA
     check = int.from_bytes(SUM[0:2],byteorder ='big')
     for i in range (2,len(SUM)-2,2) :
-        NextCheck = int.from_bytes(SUM[i:i+2],byteorder='big')
-        check = (check ^ NextCheck)
+      NextCheck = int.from_bytes(SUM[i:i+2],byteorder='big')
+      check = (check ^ NextCheck)
+    
     CHECKSUM = struct.pack('h',check)
     return(CHECKSUM)
 

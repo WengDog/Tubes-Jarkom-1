@@ -42,5 +42,9 @@ while(DATA):
   PACKET.encode()
   sock.sendto(PACKET, addr)
 
+  # Iterate
+  DATA = NEXT_DATA
+  i += 1
+
 sock.close()
 f.close()
